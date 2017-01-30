@@ -4,6 +4,8 @@ from mock import patch, MagicMock, ANY
 
 from datetime import datetime
 
+from tasks import deliver_hook_wrapper
+
 try:
     # Django <= 1.6 backwards compatibility
     from django.utils import simplejson as json

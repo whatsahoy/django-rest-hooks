@@ -118,3 +118,5 @@ target/
 
 #Test Coverage
 tests/reports/
+
+venv

@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import requests
 import json
+import hmac
+import hashlib
 
 from celery.task import Task
+from django.conf import settings
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -16,11 +21,18 @@ class DeliverHook(Task):
         instance:   a possibly null "trigger" instance
         hook:       the defining Hook object (useful for removing)
         """
-        response = requests.post(
-            url=target,
-            data=json.dumps(payload, cls=DjangoJSONEncoder),
-            headers={'Content-Type': 'application/json'}
-        )
+        data = json.dumps(payload, cls=DjangoJSONEncoder)
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        if hasattr(settings, 'DJANGO_REST_HOOKS_HMAC_ENABLED') and settings.DJANGO_REST_HOOKS_HMAC_ENABLED:
+            secret = settings.DJANGO_REST_HOOKS_HMAC_SECRET
+
+            signature = hmac.new(secret, data, hashlib.sha256).hexdigest()
+            headers['X-Rest-Hooks-Signature'] = signature
+
+        response = requests.post(url=target, data=data, headers=headers)
 
         if response.status_code == 410 and hook_id:
             hook = Hook.object.get(id=hook_id)
