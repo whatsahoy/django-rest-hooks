@@ -44,6 +44,11 @@ class Hook(models.Model):
                                       db_index=True)
     target = models.URLField('Target URL', max_length=255)
 
+    class Meta(object):
+        unique_together = (
+            ('user', 'event', 'target', ),
+        )
+
     def clean(self):
         """ Validation for events. """
         if self.event not in HOOK_EVENTS.keys():
